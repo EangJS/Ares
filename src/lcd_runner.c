@@ -14,7 +14,7 @@ void task_display_lcd(void)
     lcd_test_main(argc, argv);
     while (1)
     {
-        sleep(1);
+        sleep(10);
     }
     
 }

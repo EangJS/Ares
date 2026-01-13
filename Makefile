@@ -63,9 +63,11 @@ THREADEXEC = TASH_EXECMD_ASYNC
 # Hello, World! Example
 CFLAGS += -I$(APPDIR)/examples/ares/include
 ASRCS =
-CSRCS =   src/sound_player.c \
+CSRCS =   src/sound_runner.c \
 		  src/task_manager.c \
-		  src/lcd_runner.c
+		  src/lcd_runner.c   \
+		  src/wifi_runner.c  \
+		  src/http_client.c
 MAINSRC = ares_main.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
