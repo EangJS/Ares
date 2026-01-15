@@ -22,6 +22,7 @@ extern "C" {
 #include "fs_runner.h"
 #include "uart_runner.h"
 #include "pm_runner.h"
+#include "monitor.h"
 
 /*============================================================
  *  Public Function Prototypes

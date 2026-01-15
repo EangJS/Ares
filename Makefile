@@ -62,23 +62,33 @@ THREADEXEC = TASH_EXECMD_ASYNC
 
 # Hello, World! Example
 CFLAGS += -I$(APPDIR)/examples/ares/include
+CXXFLAGS += -I$(APPDIR)/examples/ares/include
 ASRCS =
-CSRCS =   src/sound_runner.c \
-		  src/task_manager.c \
+CXXSRCS = src/sound_runner.cpp
+CSRCS =   src/task_manager.c \
 		  src/lcd_runner.c   \
 		  src/wifi_runner.c  \
 		  src/http_client.c  \
 		  src/uart_runner.c  \
 		  src/fs_runner.c    \
-		  src/pm_runner.c
+		  src/pm_runner.c    \
+		  src/monitor.c
+
+
 MAINSRC = ares_main.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
+CXXOBJS		= $(CXXSRCS:$(CXXEXT)=$(OBJEXT))
+ifeq ($(suffix $(MAINSRC)),$(CXXEXT))
+  MAINOBJ 	= $(MAINSRC:$(CXXEXT)=$(OBJEXT))
+else
+  MAINOBJ 	= $(MAINSRC:.c=$(OBJEXT))
+endif
 MAINOBJ = $(MAINSRC:.c=$(OBJEXT))
 
-SRCS = $(ASRCS) $(CSRCS) $(MAINSRC)
-OBJS = $(AOBJS) $(COBJS)
+SRCS		= $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
+OBJS		= $(AOBJS) $(COBJS) $(CXXOBJS)
 
 ifneq ($(CONFIG_BUILD_KERNEL),y)
   OBJS += $(MAINOBJ)
@@ -118,6 +128,17 @@ $(AOBJS): %$(OBJEXT): %.S
 $(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
+$(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
+	$(call COMPILEXX, $<, $@)
+
+ifeq ($(suffix $(MAINSRC)),$(CXXEXT))
+$(MAINOBJ): %$(OBJEXT): %$(CXXEXT)
+	$(call COMPILEXX, $<, $@)
+else
+$(MAINOBJ): %$(OBJEXT): %.c
+	$(call COMPILE, $<, $@)
+endif
+
 .built: $(OBJS)
 	$(call ARCHIVE, $(BIN), $(OBJS))
 	@touch .built
@@ -147,7 +168,11 @@ context:
 endif
 
 .depend: Makefile $(SRCS)
+ifeq ($(filter %$(CXXEXT),$(SRCS)),)
 	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+else
+	@$(MKDEP) $(ROOTDEPPATH) "$(CXX)" -- $(CXXFLAGS) -- $(SRCS) >Make.dep
+endif
 	@touch $@
 
 depend: .depend

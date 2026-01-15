@@ -4,6 +4,9 @@
 
 #include "fs_runner.h"
 
+#define KB(x) ((x) * 1024)
+#define WRITE_SIZE KB(16)
+
 static pthread_mutex_t g_mutex_fs_ready;
 
 /*============================================================
@@ -28,16 +31,13 @@ static void fs_init(void)
 static void* task_write_fs(void* arg)
 {
     char* path = (char*)arg;
-    uint8_t buf[1024];
-    for (int i = 0; i < 1024; i++) 
+    uint8_t buf[WRITE_SIZE];
+    for (int i = 0; i < WRITE_SIZE; i++) 
     {
         buf[i] = i % 256;
     }
 
     int first_run = 1;
-    printf("Writer: writing to %s\n", path);
-
-
 
     while (1) {
         if (first_run) 
@@ -65,7 +65,7 @@ static void* task_write_fs(void* arg)
 static void* task_read_fs(void* arg)
 {
     char* path = (char*)arg;
-    char buf[1025];
+    char buf[WRITE_SIZE + 1];
 
     while (1)
     {
@@ -80,7 +80,7 @@ static void* task_read_fs(void* arg)
             continue;
         }
 
-        int n = read(fd, buf, 1024);
+        int n = read(fd, buf, WRITE_SIZE);
         if (n > 0) 
         {
             uint8_t result = verify_buffer((uint8_t*)buf, n);
@@ -134,7 +134,7 @@ int fs_task_main(int argc, char *argv[])
     pthread_attr_t attr;
 
     pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, 8192);
+    pthread_attr_setstacksize(&attr, WRITE_SIZE * 2);
 
     pthread_create(&writer_thread, &attr, task_write_fs, path);
     pthread_create(&reader_thread, &attr, task_read_fs, path);

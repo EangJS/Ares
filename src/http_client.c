@@ -12,42 +12,32 @@
 
 int http_client(void) {
     struct http_client_request_t request;
+    struct http_keyvalue_list_t headers;
     struct http_client_response_t response;
-    int ret;
+    struct http_client_ssl_config_t *ssl_config = NULL;
 
     memset(&request, 0, sizeof(request));
     request.method   = WGET_MODE_GET;
     request.url      = REQUEST_URL;
     request.buflen   = REQUEST_BUFFER_SIZE;
     request.encoding = CONTENT_LENGTH;
-    request.headers  = malloc(sizeof(struct http_keyvalue_list_t));
-    if (!request.headers)
-    {
-        printf("Failed to allocate headers\n");
-        return -1;
+
+    http_keyvalue_list_init(&headers);
+    request.headers = &headers;
+    if (http_client_response_init(&response) < 0) {
+        printf("fail to response init\n");
+        goto release_out;
     }
-    http_keyvalue_list_init(request.headers);
-
-    if (http_client_response_init(&response) < 0)
-    {
-        printf("Failed to init response\n");
-        free(request.headers);
-        return -1;
+    if (http_client_send_request(&request, ssl_config, &response)) {
+        printf("fail to send request\n");
+        goto release_out;
     }
+    printf( "Response Status: %d\n", response.status );
+    printf( "%s\n", response.entity );
 
-    ret = http_client_send_request(&request, NULL, &response);
-    if (ret < 0)
-    {
-        printf("Request failed\n");
-        http_client_response_release(&response);
-        free(request.headers);
-        return -1;
-    }
-
-    printf("HTTP Response:\n%s\n%s\n", response.message, response.entity);
-
+release_out:
     http_client_response_release(&response);
-    free(request.headers);
+    http_keyvalue_list_release(&headers);
 
-    return 0;
+    return NULL;
 }
