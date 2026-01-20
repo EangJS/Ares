@@ -1,12 +1,26 @@
+#include "wifi_runner.h"
+#include "http_client.h"
 #include <stdio.h>
 #include <tinyara/config.h>
 
-#include "http_client.h"
-#include "wifi_runner.h"
+/* ******************************************************************************* */
+/*                           Macro Defnitions                                      */
+/* ******************************************************************************* */
 
 #define XIAOMI_SSID "xiaomi_test"
 #define XIAOMI_PASSWORD "1234567890"
 #define XIAOMI_AUTH "wpa2_aes"
+
+/* ******************************************************************************* */
+/*                           Private Function Declarations                         */
+/* ******************************************************************************* */
+
+static void init_wifi( void );
+static void connect_wifi( void );
+
+/* ******************************************************************************* */
+/*                           Private Function Defnitions                           */
+/* ******************************************************************************* */
 
 static void init_wifi( void )
 {
@@ -27,6 +41,10 @@ static void connect_wifi( void )
 
     return;
 }
+
+/* ******************************************************************************* */
+/*                           Public Function Defnitions                            */
+/* ******************************************************************************* */
 
 int wifi_runnable( int argc, char *argv[] )
 {

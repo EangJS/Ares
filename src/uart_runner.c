@@ -11,17 +11,30 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+/* ******************************************************************************* */
+/*                           Macro Defnitions                                      */
+/* ******************************************************************************* */
+
 #ifndef CONFIG_EXAMPLES_UART_LOOPBACK_PORT
 #define CONFIG_EXAMPLES_UART_LOOPBACK_PORT 2
 #endif
 
 #define UART_DEV_PATH "/dev/ttyS%d"
 #define UART_DEV_PATH_MAX_LEN 12
-
 #define UART_POLL_TIMEOUT_MS 10000
 
 #define TEST_STR "1234567890abcdefghijklmnopqrstuvwxyz"
 #define TEST_STR_LEN 37
+
+/* ******************************************************************************* */
+/*                           Private Function Declarations                         */
+/* ******************************************************************************* */
+
+static int uart_rx_loop( pthread_addr_t *arg );
+
+/* ******************************************************************************* */
+/*                           Private Function Defnitions                           */
+/* ******************************************************************************* */
 
 static int uart_rx_loop( pthread_addr_t *arg )
 {
@@ -88,6 +101,10 @@ static int uart_rx_loop( pthread_addr_t *arg )
     close( fd );
     return 0;
 }
+
+/* ******************************************************************************* */
+/*                           Public Function Defnitions                            */
+/* ******************************************************************************* */
 
 int uart_runnable( int argc, char *argv[] )
 {

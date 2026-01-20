@@ -16,7 +16,9 @@ extern "C" {
  * (e.g., from an RTOS task or main loop) to update
  * and manage LCD display content.
  */
-int task_display_lcd(int argc, char *argv[]);
+int task_power_lcd(int argc, char *argv[]);
+
+void set_lcd_power( int power );
 
 #ifdef __cplusplus
 }

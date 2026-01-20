@@ -1,35 +1,42 @@
+#include "fs_runner.h"
 #include <fcntl.h>
 #include <pthread.h>
 #include <tinyara/arch.h>
 
-#include "fs_runner.h"
+/* ******************************************************************************* */
+/*                           Macro Defnitions                                      */
+/* ******************************************************************************* */
 
 #define KB( x ) ( ( x ) * 1024 )
 #define WRITE_SIZE KB( 16 )
-#define DUMP_BUFFER( n, buf )                                \
-    do                                                       \
-    {                                                        \
-        for ( int i = 0; i < ( n ); i++ )                    \
-        {                                                    \
-            printf( "%02x ", buf[ i ] );                     \
-        }                                                    \
-        printf( "\n" );                                      \
+#define DUMP_BUFFER( n, buf )                                                                                          \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        for ( int i = 0; i < ( n ); i++ )                                                                              \
+        {                                                                                                              \
+            printf( "%02x ", buf[ i ] );                                                                               \
+        }                                                                                                              \
+        printf( "\n" );                                                                                                \
     } while ( 0 )
+
+/* ******************************************************************************* */
+/*                           Private Variable Defnitions                           */
+/* ******************************************************************************* */
 
 static pthread_mutex_t g_mutex_fs_ready;
 
-/*============================================================
- *  Private Function Declarations
- *============================================================*/
+/* ******************************************************************************* */
+/*                           Private Function Declarations                         */
+/* ******************************************************************************* */
 
 static uint8_t verify_buffer( uint8_t *buf, size_t len );
 static void fs_init( void );
 static void *task_write_fs( void *arg );
 static void *task_read_fs( void *arg );
 
-/*============================================================
- *  Private Function Definitions
- *============================================================*/
+/* ******************************************************************************* */
+/*                           Private Function Defnitions                           */
+/* ******************************************************************************* */
 
 static void fs_init( void )
 {
@@ -126,9 +133,9 @@ static uint8_t verify_buffer( uint8_t *buf, size_t len )
     return 0;
 }
 
-/*============================================================
- *  Public Function Definitions
- *============================================================*/
+/* ******************************************************************************* */
+/*                           Public Function Defnitions                            */
+/* ******************************************************************************* */
 
 int fs_task_main( int argc, char *argv[] )
 {

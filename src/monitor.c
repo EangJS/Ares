@@ -1,21 +1,26 @@
 #include <errno.h>
 #include <fcntl.h>
-
-#include <tinyara/fs/ioctl.h>
-#include <tinyara/mminfo.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <tinyara/config.h>
-#if defined( CONFIG_BUILD_PROTECTED ) && defined( CONFIG_MM_KERNEL_HEAP )
-#include <errno.h>
-#include <fcntl.h>
-
 #include <tinyara/fs/ioctl.h>
 #include <tinyara/mminfo.h>
-#endif
+
+/* ******************************************************************************* */
+/*                           Macro Defnitions                                      */
+/* ******************************************************************************* */
 
 #define MAX( a, b ) ( ( a ) > ( b ) ? ( a ) : ( b ) )
+
+/* ******************************************************************************* */
+/*                           Private Function Declarations                         */
+/* ******************************************************************************* */
+
+static int get_heap_info( struct mallinfo *out );
+
+/* ******************************************************************************* */
+/*                           Private Function Defnitions                           */
+/* ******************************************************************************* */
 
 static int get_heap_info( struct mallinfo *out )
 {
@@ -43,6 +48,10 @@ static int get_heap_info( struct mallinfo *out )
     return 0;
 }
 
+/* ******************************************************************************* */
+/*                           Public Function Defnitions                            */
+/* ******************************************************************************* */
+
 int monitor_task( int argc, char *argv[] )
 {
     struct mallinfo heap;
@@ -51,10 +60,7 @@ int monitor_task( int argc, char *argv[] )
     {
         get_heap_info( &heap );
         max_memory_used = MAX( max_memory_used, heap.uordblks );
-        printf( "Used Memory: %d/%d bytes MAX:%d\n",
-                heap.uordblks,
-                heap.arena,
-                max_memory_used );
+        printf( "Used Memory: %d/%d bytes MAX:%d\n", heap.uordblks, heap.arena, max_memory_used );
         sleep( 3 );
     }
 }

@@ -1,12 +1,10 @@
-#include <stdio.h>
-#include <tinyara/config.h>
-
+#include "lcd_drawer.h"
 #include "lcd_runner.h"
-
 #include "lvgl.h"
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -14,27 +12,46 @@
 #include <tinyara/lcd/lcd_dev.h>
 #include <tinyara/rtc.h>
 
+/* ******************************************************************************* */
+/*                           Private Macro Defnitions                           */
+/* ******************************************************************************* */
+
 #define LCD_DEV_PATH "/dev/lcd%d"
 #define LCD_DEV_PORT 0
-
-/* ====================== CONFIG ====================== */
 #define LCD_W CONFIG_LCD_YRES
 #define LCD_H CONFIG_LCD_XRES
 #define BYTES_PER_PIXEL 2
 #define IMG_NAME crabpower
 
-/* ====================== BUFFERS ==================== */
+/* ******************************************************************************* */
+/*                           Public Variable Declarations                          */
+/* ******************************************************************************* */
+
+extern bool lcd_on;
+
+/* ******************************************************************************* */
+/*                           Private Variable Declarations                         */
+/* ******************************************************************************* */
+
 static lv_color_t *buf1 = NULL;
 LV_IMG_DECLARE( IMG_NAME );
-
-/* ===================== GLOBALS ===================== */
 static int lcd_fd = -1;
 static lv_display_t *disp;
 
-void set_lcd_power( int power )
-{
-    power_test( power );
-}
+/* ******************************************************************************* */
+/*                           Private Function Declarations                         */
+/* ******************************************************************************* */
+
+static void lcd_flush_cb( lv_display_t *display, const lv_area_t *area, uint8_t *px_map );
+static void lv_hal_init( void );
+static void lv_port_disp_init( void );
+static void anim_x_cb( void *var, int32_t v );
+static void anim_size_cb( void *var, int32_t v );
+static void lcd_draw( void );
+
+/* ******************************************************************************* */
+/*                           Private Function Defnitions                           */
+/* ******************************************************************************* */
 
 static void lcd_flush_cb( lv_display_t *display, const lv_area_t *area, uint8_t *px_map )
 {
@@ -54,7 +71,7 @@ static void lcd_flush_cb( lv_display_t *display, const lv_area_t *area, uint8_t 
     lv_display_flush_ready( display );
 }
 
-void lv_hal_init( void )
+static void lv_hal_init( void )
 {
     struct fb_videoinfo_s vinfo;
     char port[ 20 ];
@@ -79,7 +96,7 @@ void lv_hal_init( void )
     printf( "LCD resolution: %dx%d\n", vinfo.xres, vinfo.yres );
 }
 
-void lv_port_disp_init( void )
+static void lv_port_disp_init( void )
 {
     lv_init();
 
@@ -108,16 +125,12 @@ static void anim_size_cb( void *var, int32_t v )
     lv_obj_set_size( (lv_obj_t *)var, v, v );
 }
 
-/**
- * Create a playback animation
- */
-void lcd_draw( void )
+static void lcd_draw( void )
 {
     lv_obj_t *img = lv_img_create( lv_scr_act() ); // create image object
     lv_img_set_src( img, &IMG_NAME );              // set the crab image
     lv_obj_align( img, LV_ALIGN_LEFT_MID, 10, 0 );
 
-    // Animate horizontally
     lv_anim_t a;
     lv_anim_init( &a );
     lv_anim_set_var( &a, img );
@@ -129,21 +142,25 @@ void lcd_draw( void )
     lv_anim_start( &a );
 }
 
+/* ******************************************************************************* */
+/*                           Public Function Defnitions                            */
+/* ******************************************************************************* */
+
 int task_draw_lcd( int argc, char *argv[] )
 {
-    /* Initialize LCD & LVGL */
     set_lcd_power( 100 );
     lv_hal_init();
     lv_port_disp_init();
-
     lcd_draw();
 
-    /* ===== Main LVGL loop ===== */
     while ( 1 )
     {
-        lv_tick_inc( 5 );
-        lv_timer_handler();
-        usleep( 5000 ); // 5 ms
+        if ( lcd_on )
+        {
+            lv_tick_inc( 5 );
+            lv_timer_handler();
+        }
+        usleep( 5000 );
     }
 
     return 0;

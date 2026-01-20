@@ -1,10 +1,19 @@
+#include "lcd_runner.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <tinyara/config.h>
 
-#include "lcd_runner.h"
+/* ******************************************************************************* */
+/*                           Private Function Declarations                         */
+/* ******************************************************************************* */
 
-void start_pm_test( uint32_t timeout )
+static void start_pm_test( uint32_t timeout );
+
+/* ******************************************************************************* */
+/*                           Private Function Defnitions                           */
+/* ******************************************************************************* */
+
+static void start_pm_test( uint32_t timeout )
 {
     static char timeout_str[ 11 ]; // uint32_t max: 10 digits + '\0'
 
@@ -16,6 +25,10 @@ void start_pm_test( uint32_t timeout )
 
     power_main( argc, argv );
 }
+
+/* ******************************************************************************* */
+/*                           Public Function Defnitions                            */
+/* ******************************************************************************* */
 
 int task_start_power_management( int argc, char *argv[] )
 {
