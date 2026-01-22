@@ -27,7 +27,13 @@ jobs:
       - name: Check Docker
         run: docker --version
 
-      - name: Run Python script
+      - name: Run Build script
         working-directory: scripts
         run: |
           python CI.py
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ares-build-assets
+          path: /tmp/build/assets.zip
