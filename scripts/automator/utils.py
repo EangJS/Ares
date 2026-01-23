@@ -24,9 +24,10 @@ def clone(tizenrt_dir, ares_dir, clone_ares=False):
     # Clone repo if not already present
     os_dir = os.path.join(tizenrt_dir, "os")
     patch_dir = os.path.join(ares_dir, "scripts", "patches")
+    requires_patching = False
     if not os.path.isdir(tizenrt_dir):
         run(f"git clone {TIZENRT_REPO} {tizenrt_dir}")
-        apply_patches(patch_dir, ares_dir, tizenrt_dir)
+        requires_patching = True
     else:
         print("TizenRT already cloned, skipping clone.")
     
@@ -38,7 +39,9 @@ def clone(tizenrt_dir, ares_dir, clone_ares=False):
     elif not os.path.isdir(ares_dir):
         run(f"mkdir -p {ares_dir}")
         run(f"cp -r . {ares_dir}/", cwd="..")
-    
+
+    if requires_patching:
+        apply_patches(patch_dir, ares_dir, tizenrt_dir)
     run("git submodule update --init --recursive", cwd=ares_dir)
 
     if not os.path.isdir(os_dir):
