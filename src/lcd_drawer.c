@@ -11,6 +11,7 @@
 #include <tinyara/config.h>
 #include <tinyara/lcd/lcd_dev.h>
 #include <tinyara/rtc.h>
+#include <mqueue.h>
 
 /* ******************************************************************************* */
 /*                           Private Macro Defnitions                           */
@@ -28,6 +29,7 @@
 /* ******************************************************************************* */
 
 extern bool lcd_on;
+extern mqd_t time_status_mq;
 
 /* ******************************************************************************* */
 /*                           Private Variable Declarations                         */
@@ -159,7 +161,6 @@ int task_draw_lcd( int argc, char *argv[] )
     lv_hal_init();
     lv_port_disp_init();
     lcd_draw();
-    char *time_str = malloc( 64 * sizeof( char ) );
     uint32_t i = 0;
 
     while ( 1 )
@@ -169,17 +170,18 @@ int task_draw_lcd( int argc, char *argv[] )
             lv_tick_inc( 5 );
             lv_timer_handler();
         }
-        if ( i % 100 == 0 )
+        if ( i % 200 == 0 )
         {
-            http_client( time_str );
-            lv_label_set_text( price_label, time_str );
+            char *time_str;
+            if (mq_receive(time_status_mq, (char*)&time_str, sizeof(time_str), NULL) > 0) {
+                lv_label_set_text(price_label, time_str);
+                free(time_str);
+            }
         }
         i++;
 
         usleep( 5000 );
     }
-
-    free( time_str );
 
     return 0;
 }
