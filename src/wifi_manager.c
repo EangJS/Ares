@@ -2,9 +2,11 @@
 #include "wifi_runner.h"
 #include <fcntl.h>
 #include <mqueue.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <tinyara/config.h>
+#include <pthread.h>
 
 /* ******************************************************************************* */
 /*                           Macro Defnitions                                      */
@@ -14,12 +16,15 @@
 #define XIAOMI_PASSWORD "1234567890"
 #define XIAOMI_AUTH "wpa2_aes"
 #define MQ_NAME "/time_status_mq"
+#define WIFI_CONNECTED_BIT 0x01
 
 /* ******************************************************************************* */
 /*                           Public Variable Declarations                          */
 /* ******************************************************************************* */
-uint8_t is_wifi_connected;
 mqd_t time_status_mq;
+pthread_mutex_t wifi_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t wifi_cond = PTHREAD_COND_INITIALIZER;
+int wifi_status = 0;
 
 /* ******************************************************************************* */
 /*                           Private Function Declarations                         */
@@ -27,6 +32,9 @@ mqd_t time_status_mq;
 
 static void init_wifi( void );
 static void connect_wifi( void );
+static void get_wifi_info( void );
+static int mq_init( void );
+static void wifi_set_ready( void );
 
 /* ******************************************************************************* */
 /*                           Private Function Defnitions                           */
@@ -54,11 +62,8 @@ static void connect_wifi( void )
 
 static void get_wifi_info( void )
 {
-    if ( !is_wifi_connected )
-    {
-        printf( "WiFi not connected yet, skip getting WiFi info\n" );
-        return;
-    }
+    wait_for_wifi();
+
     char *argv[] = { "wm_test", "info", NULL };
     int argc = 2;
 
@@ -79,16 +84,37 @@ static int mq_init( void )
     return 0;
 }
 
+static void wifi_set_ready( void )
+{
+    pthread_mutex_lock(&wifi_mutex);
+    wifi_status |= WIFI_CONNECTED_BIT;
+    pthread_cond_broadcast(&wifi_cond);
+    pthread_mutex_unlock(&wifi_mutex);
+}
+
 /* ******************************************************************************* */
 /*                           Public Function Defnitions                            */
 /* ******************************************************************************* */
 
+void wait_for_wifi( void )
+{
+    pthread_mutex_lock(&wifi_mutex);
+
+    while (!(wifi_status & WIFI_CONNECTED_BIT))
+    {
+        pthread_cond_wait(&wifi_cond, &wifi_mutex);
+    }
+
+    pthread_mutex_unlock(&wifi_mutex);
+}
+
 int wifi_runnable( int argc, char *argv[] )
 {
     init_wifi();
-    sleep( 5 );
+    sleep( 3 );
     connect_wifi();
-    is_wifi_connected = 1;
+    sleep( 5 );
+    wifi_set_ready();
     if ( mq_init() < 0 )
     {
         perror( "mq_init failed" );
@@ -113,6 +139,6 @@ int wifi_runnable( int argc, char *argv[] )
             free( time_str );
         }
 
-        sleep( 1 );
+        sleep( 10 );
     }
 }
