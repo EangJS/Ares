@@ -67,7 +67,7 @@ CFLAGS  += -Werror
 CFLAGS    += -I$(APPDIR)/examples/ares/include \
              -I$(CJSON_PATH)
 CXXFLAGS  += -I$(APPDIR)/examples/ares/include
-CXXSRCS   += src/sound_manager.cpp
+
 CSRCS     += src/task_manager.c \
 			 src/wifi_manager.c  \
 			 src/http_client.c  \
@@ -78,7 +78,8 @@ CSRCS     += src/task_manager.c \
 			 src/system_monitor.c \
 			 src/netstress_manager.c \
 			 src/ota_manager.c \
-			 src/kernel_update.c
+			 src/kernel_update.c \
+			 src/sound_manager.c
 
 ifeq ($(CONFIG_LCD),y)
 	include $(LVGL_PATH)/lvgl.mk
