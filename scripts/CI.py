@@ -13,7 +13,7 @@ from automator.utils import *
 
 BUILD_DIR = "/tmp/build"
 TIZENRT_DIR = BUILD_DIR + "/TizenRT"
-CONFIGS = ["ares_ddr", "ares_ddr_st7785", "ares_psram"]
+CONFIGS = ["ares_ddr_st7785", "ares_psram"]
 
 def get_next_build_number(repo_url, repo_name, auth):
     """
@@ -74,7 +74,7 @@ def upload_to_nexus_raw(repo_url, repo_name, file_path, directory, auth=None):
 def main(args):
     for config in CONFIGS:
         ares_dir = os.path.join(TIZENRT_DIR, "apps", "examples", "ares")
-        clone_repos(TIZENRT_DIR, ares_dir, True)
+        clone_repos(TIZENRT_DIR, ares_dir, clone_ares=False)
         local_build(build_dir=BUILD_DIR, tizenrt_dir=TIZENRT_DIR, ares_dir=ares_dir, config=config)
     assets_zip_path = f"{BUILD_DIR}/artifacts/ares.tar.xz"
     run(f"mkdir -p {BUILD_DIR}/artifacts")
